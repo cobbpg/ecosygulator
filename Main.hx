@@ -33,6 +33,7 @@ class Main extends MovieClip
     Lib.current.addChild(this);
     scene = new Scene();
     addChild(scene);
+    scene.init();
     addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
   }
 

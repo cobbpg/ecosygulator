@@ -18,17 +18,44 @@
 
 package;
 
+import flash.Lib;
 import flash.display.Sprite;
 
 class Scene extends Sprite
 {
+
+  private var creatures:List<Creature>;
+
+  private var prevTime:Int;
+
   public function new()
   {
     super();
+    prevTime = Lib.getTimer();
+  }
+
+  public function init()
+  {
+    creatures = new List();
+    for (i in 0...50)
+      {
+	var c = new Creature(i % 3, 10);
+	addChild(c);
+	creatures.add(c);
+	c.init();
+      }
   }
 
   public function update()
   {
+    var curTime = Lib.getTimer();
+    var dt = (curTime - prevTime) * 0.001;
+    prevTime = curTime;
+
+    for (c in creatures)
+      {
+	c.update(dt);
+      }
   }
 
 }
