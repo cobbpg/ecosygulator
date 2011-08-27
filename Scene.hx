@@ -24,6 +24,7 @@ import flash.display.Sprite;
 class Scene extends Sprite
 {
 
+  private var ecosystem:Ecosystem;
   private var creatures:List<Creature>;
 
   private var prevTime:Int;
@@ -32,17 +33,22 @@ class Scene extends Sprite
   {
     super();
     prevTime = Lib.getTimer();
+    ecosystem = new Ecosystem("0,33cc22,10,0;3,ffffff,0,-2,1;5,000000,1,-1,1");
   }
 
   public function init()
   {
+    var populations = [1000,50,5];
     creatures = new List();
-    for (i in 0...50)
+    for (n in 0...populations.length)
       {
-	var c = new Creature(i % 3, 10);
-	addChild(c);
-	creatures.add(c);
-	c.init();
+	for (i in 0...populations[n])
+	  {
+	    var c = new Creature(ecosystem.speedOf(n), ecosystem.colourOf(n));
+	    addChild(c);
+	    creatures.add(c);
+	    c.init();
+	  }
       }
   }
 

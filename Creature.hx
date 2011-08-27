@@ -19,26 +19,25 @@
 package;
 
 import flash.display.Sprite;
-import Math;
 
 class Creature extends Sprite
 {
 
   private static inline var radius:Float = 5;
 
-  private var species:Int;
   private var speed:Float;
+  private var colour:Int;
 
   private var px:Float;
   private var py:Float;
   private var vx:Float;
   private var vy:Float;
 
-  public function new(species:Int, speed:Float)
+  public function new(speed:Float, colour:Int)
   {
     super();
-    this.species = species;
     this.speed = speed;
+    this.colour = colour;
   }
 
   public function init() {
@@ -49,10 +48,7 @@ class Creature extends Sprite
     vx = Math.cos(a) * speed;
     vy = Math.sin(a) * speed;
 
-    var c = 0xffffff;
-    if (species == 1) c = 0x33cc66;
-    if (species == 2) c = 0x000000;
-    graphics.beginFill(c);
+    graphics.beginFill(colour);
     graphics.drawEllipse(-radius, -radius, radius * 2, radius * 2);
     graphics.endFill();
   }
@@ -62,11 +58,11 @@ class Creature extends Sprite
     px += vx * dt;
     py += vy * dt;
 
-    if (px < radius && vx < 0 || px > stage.stageWidth - radius && vx > 0)
+    if ((px < radius && vx < 0) || (px > stage.stageWidth - radius && vx > 0))
       {
 	vx *= -1;
       }
-    if (py < radius && vy < 0 || py > stage.stageHeight - radius && vy > 0)
+    if ((py < radius && vy < 0) || (py > stage.stageHeight - radius && vy > 0))
       {
 	vy *= -1;
       }
