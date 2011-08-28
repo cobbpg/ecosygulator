@@ -29,14 +29,14 @@ typedef Species =
 class Ecosystem
 {
 
-  private var species:Array<Species>;
+  private var speciesProperties:Array<Species>;
   private var preyMatrix:Array<Array<Bool>>;
 
   public function new(description:String)
   {
     var sds = description.split(";");
     var n = sds.length;
-    species = [];
+    speciesProperties = [];
     preyMatrix = [];
 
     for (sd in sds)
@@ -51,24 +51,19 @@ class Ecosystem
 	for (i in 0...n) preys.push(false);
 	for (p in data) preys[Std.parseInt(p)] = true;
 
-	species.push({speed:speed, colour:colour, reproduction:reproduction, efficiency:efficiency});
+	speciesProperties.push({speed:speed, colour:colour, reproduction:reproduction, efficiency:efficiency});
 	preyMatrix.push(preys);
       }
   }
 
-  public function speedOf(sid:Int):Float
+  public function species(sid:Int):Species
   {
-    return species[sid].speed;
+    return speciesProperties[sid];
   }
 
   public function preyOf(predator:Int, prey:Int):Bool
   {
     return preyMatrix[predator][prey];
-  }
-
-  public function colourOf(sid:Int):Int
-  {
-    return species[sid].colour;
   }
 
 }

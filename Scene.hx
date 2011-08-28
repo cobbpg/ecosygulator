@@ -25,7 +25,7 @@ class Scene extends Sprite
 {
 
   private var ecosystem:Ecosystem;
-  private var creatures:List<Creature>;
+  private var creatures:Array<List<Creature>>;
   private var populations:Array<Float>;
   private var maxPopulations:Array<Float>;
   private var prevPopulations:Array<Float>;
@@ -36,9 +36,9 @@ class Scene extends Sprite
   public function new()
   {
     super();
-    prevTime = Lib.getTimer();
-    ecosystem = new Ecosystem("0,33cc22,10,0;3,ffffff,0,-2,0;5,000000,1,-1,1");
-    populations = [300.0,70.0,5.0];
+    prevTime = Lib.getTimer() * 10;
+    ecosystem = new Ecosystem("0,33cc22,0.01,0;3,ffffff,-0.2,0.001,0;5,000000,-0.03,0.004,1");
+    populations = [200.0,20.0,2.0];
     prevPopulations = populations.copy();
     maxPopulations = [1000.0,200.0,20.0];
     interactions = 0;
@@ -53,29 +53,19 @@ class Scene extends Sprite
     return {x: x, y: y};
   }
 
-  // Utility function to instantiate a new creature
-  private function newCreature(species:Int)
-  {
-    return new Creature(species, ecosystem.speedOf(species), ecosystem.colourOf(species));
-  }
-
   public function init()
   {
-    creatures = new List();
+    creatures = [];
     for (species in 0...populations.length)
       {
+	creatures.push(new List());
+
 	// Create populations
-	for (i in 0...Std.int(populations[species]))
-	  {
-	    var c = newCreature(species);
-	    addChild(c);
-	    creatures.add(c);
-	    c.init();
-	  }
+	for (i in 0...Std.int(populations[species])) { create(species); }
 
 	// Draw ecosystem blobs
 	var coords = speciesCoordinates(species);
-	graphics.beginFill(ecosystem.colourOf(species));
+	graphics.beginFill(ecosystem.species(species).colour);
 	graphics.drawEllipse(coords.x - 5, coords.y - 5, 10, 10);
 	graphics.endFill();
       }
@@ -105,19 +95,53 @@ class Scene extends Sprite
   public function update()
   {
     // Calculate the duration of the current frame
-    var curTime = Lib.getTimer();
+    var curTime = Lib.getTimer() * 10;
     var dt = (curTime - prevTime) * 0.001;
 
     // Move creature blobs
-    for (c in creatures)
+    for (cs in creatures) { for (c in cs) { c.update(dt); } }
+
+    // Population dynamics
+    var p = populations.copy();
+    for (i in 0...populations.length)
       {
-	c.update(dt);
+	var s = ecosystem.species(i);
+
+	// Natural reproduction (negative for non-plants)
+	var d = s.reproduction;
+
+	// Effects of hunting
+	for (j in 0...populations.length)
+	  {
+	    if (ecosystem.preyOf(i, j)) { d += s.efficiency * p[j]; }
+	  }
+
+	// Effects of being hunted
+	for (j in 0...populations.length)
+	  {
+	    if (ecosystem.preyOf(j, i)) { d -= ecosystem.species(j).efficiency * p[j]; }
+	  }
+	populations[i] *= 1 + dt * d;
+      }
+
+    // Update creature list to reflect population changes
+    for (species in 0...populations.length)
+      {
+	var d = Std.int(populations[species]) - Std.int(p[species]);
+	if (d > 0)
+	  {
+	    for (i in 0...d) { create(species); }
+	  }
+	else
+	  {
+	    for (i in 0...-d) { removeChild(creatures[species].pop()); }
+	  }
       }
 
     // Update population trend plots
     for (species in 0...populations.length)
       {
-	graphics.lineStyle(1, ecosystem.colourOf(species));
+	graphics.lineStyle(1, ecosystem.species(species).colour);
 	graphics.moveTo(prevTime * 0.001, stage.stageHeight * (1 - 0.25 * prevPopulations[species] / maxPopulations[species]));
 	graphics.lineTo(curTime * 0.001, stage.stageHeight * (1 - 0.25 * populations[species] / maxPopulations[species]));
       }
@@ -127,11 +151,22 @@ class Scene extends Sprite
     prevPopulations = populations.copy();
   }
 
-  // Kill a specific creature
-  public function kill(creature:Creature)
+  // Create a new creature of a given species
+  private function create(species:Int)
   {
-    populations[creature.species] = Math.max(0, populations[creature.species] - 1);
-    creatures.remove(creature);
+    var s = ecosystem.species(species);
+    var c = new Creature(species, s.speed, s.colour);
+    addChild(c);
+    creatures[species].add(c);
+    c.init();
+  }
+
+  // Kill a specific creature
+  public function kill(creature:Creature, interactive:Bool = true)
+  {
+    var species = creature.species;
+    populations[species] = Math.max(0, populations[species] - 1);
+    creatures[species].remove(creature);
     removeChild(creature);
     interactions++;
   }
