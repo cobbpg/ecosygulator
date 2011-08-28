@@ -19,12 +19,18 @@
 package;
 
 import flash.display.Sprite;
+import flash.events.Event;
+import flash.events.MouseEvent;
 
 class Creature extends Sprite
 {
 
-  private static inline var radius:Float = 5;
+  private static inline var radius:Float = 7;
 
+  private static var fieldWidth:Float = 0;
+  private static var fieldHeight:Float = 0;
+
+  public var species(default, null):Int;
   private var speed:Float;
   private var colour:Int;
 
@@ -33,16 +39,23 @@ class Creature extends Sprite
   private var vx:Float;
   private var vy:Float;
 
-  public function new(speed:Float, colour:Int)
+  public function new(species:Int, speed:Float, colour:Int)
   {
     super();
+    this.species = species;
     this.speed = speed;
     this.colour = colour;
   }
 
   public function init() {
-    px = Math.random() * stage.stageWidth;
-    py = Math.random() * stage.stageHeight;
+    if (fieldWidth == 0)
+      {
+	fieldWidth = stage.stageWidth * 0.8;
+	fieldHeight = stage.stageHeight * 0.75;
+      }
+
+    px = Math.random() * fieldWidth;
+    py = Math.random() * fieldHeight;
 
     var a = Math.random() * 2 * Math.PI;
     vx = Math.cos(a) * speed;
@@ -51,6 +64,8 @@ class Creature extends Sprite
     graphics.beginFill(colour);
     graphics.drawEllipse(-radius, -radius, radius * 2, radius * 2);
     graphics.endFill();
+
+    addEventListener(MouseEvent.CLICK, kill, false, 0, true);
   }
 
   public function update(dt:Float)
@@ -58,17 +73,22 @@ class Creature extends Sprite
     px += vx * dt;
     py += vy * dt;
 
-    if ((px < radius && vx < 0) || (px > stage.stageWidth - radius && vx > 0))
+    if ((px < radius && vx < 0) || (px > fieldWidth - radius && vx > 0))
       {
 	vx *= -1;
       }
-    if ((py < radius && vy < 0) || (py > stage.stageHeight - radius && vy > 0))
+    if ((py < radius && vy < 0) || (py > fieldHeight - radius && vy > 0))
       {
 	vy *= -1;
       }
 
     x = px;
     y = py;
+  }
+
+  public function kill(event:Event)
+  {
+    cast(parent, Scene).kill(this);
   }
 
 }

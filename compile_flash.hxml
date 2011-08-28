@@ -1,5 +1,5 @@
 -main Main
 -swf9 ecosygulator.swf
 -swf-version 9
--swf-header 640:360:60:cccccc
+-swf-header 640:480:60:cccccc
 -debug
