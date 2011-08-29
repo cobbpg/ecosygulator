@@ -25,7 +25,7 @@ import flash.events.MouseEvent;
 class Creature extends Sprite
 {
 
-  private static inline var radius:Float = 7;
+  private static inline var radius:Float = 15;
 
   private static var fieldWidth:Float = 0;
   private static var fieldHeight:Float = 0;
@@ -54,12 +54,15 @@ class Creature extends Sprite
 	fieldHeight = stage.stageHeight * 0.75;
       }
 
-    px = Math.random() * fieldWidth;
-    py = Math.random() * fieldHeight;
+    px = Math.random() * (fieldWidth - radius * 2) + radius;
+    py = Math.random() * (fieldHeight - radius * 2) + radius;
 
     var a = Math.random() * 2 * Math.PI;
     vx = Math.cos(a) * speed;
     vy = Math.sin(a) * speed;
+
+    x = px;
+    y = py;
 
     graphics.beginFill(colour);
     graphics.drawEllipse(-radius, -radius, radius * 2, radius * 2);

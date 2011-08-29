@@ -20,6 +20,16 @@ package;
 
 import flash.Lib;
 import flash.display.Sprite;
+import flash.text.TextField;
+import flash.text.TextFormat;
+import flash.text.TextFormatAlign;
+
+typedef Level =
+  {
+    var ecosystem:String;
+    var startPop:Array<Float>;
+    var maxPop:Array<Float>;
+  }
 
 class Scene extends Sprite
 {
@@ -29,19 +39,27 @@ class Scene extends Sprite
   private var populations:Array<Float>;
   private var maxPopulations:Array<Float>;
   private var prevPopulations:Array<Float>;
-  private var interactions:Int;
+  private var interventions:Int;
+  private var hudLabel:TextField;
+  private var hudText:String;
+
+  private var victory:Void -> Void;
+  private var defeat:Void -> Void;
 
   private var prevTime:Int;
+  private var ownTime:Float;
+  private var done:Bool;
 
-  public function new()
+  public function new(level:Level)
   {
     super();
     prevTime = Lib.getTimer() * 10;
-    ecosystem = new Ecosystem("0,33cc22,0.01,0;3,ffffff,-0.2,0.001,0;5,000000,-0.03,0.004,1");
-    populations = [200.0,20.0,2.0];
+    ecosystem = new Ecosystem(level.ecosystem);
+    populations = level.startPop;
     prevPopulations = populations.copy();
-    maxPopulations = [1000.0,200.0,20.0];
-    interactions = 0;
+    maxPopulations = level.maxPop;
+    interventions = 0;
+    ownTime = 0;
   }
 
   // Coordinates of a species blob in the ecosystem diagram
@@ -53,8 +71,33 @@ class Scene extends Sprite
     return {x: x, y: y};
   }
 
-  public function init()
+  public function init(level:Int, victory:Void -> Void, defeat:Void -> Void)
   {
+    this.victory = victory;
+    this.defeat = defeat;
+    done = false;
+
+    // Separators
+    graphics.lineStyle(1, 0x000000);
+    graphics.moveTo(0, stage.stageHeight * 0.75);
+    graphics.lineTo(stage.stageWidth, stage.stageHeight * 0.75);
+    graphics.moveTo(stage.stageWidth * 0.8, 0);
+    graphics.lineTo(stage.stageWidth * 0.8, stage.stageHeight * 0.75);
+    graphics.lineStyle();
+
+    // Intervention indicator
+    hudText = "Level:\n" + (level + 1) + "\n\nInterventions:\n";
+    var tf = new TextFormat("Arial", 16, 0x000000, false, false, false);
+    tf.align = TextFormatAlign.CENTER;
+    hudLabel = new TextField();
+    hudLabel.defaultTextFormat = tf;
+    hudLabel.x = stage.stageWidth * 0.8;
+    hudLabel.y = stage.stageHeight * 0.3;
+    hudLabel.width = stage.stageWidth * 0.2;
+    hudLabel.height = stage.stageHeight * 0.3;
+    hudLabel.text = hudText + "0";
+    addChild(hudLabel);
+
     creatures = [];
     for (species in 0...populations.length)
       {
@@ -94,9 +137,20 @@ class Scene extends Sprite
 
   public function update()
   {
+    if (done) { return; }
+
     // Calculate the duration of the current frame
     var curTime = Lib.getTimer() * 10;
     var dt = (curTime - prevTime) * 0.001;
+    ownTime += dt;
+
+    // Victory condition: reaching the amount of time needed to fill the screen
+    if (ownTime >= stage.stageWidth)
+      {
+	hudLabel.text = hudText + interventions + "\n\nWell done!";
+	done = true;
+	victory();
+      }
 
     // Move creature blobs
     for (cs in creatures) { for (c in cs) { c.update(dt); } }
@@ -105,22 +159,22 @@ class Scene extends Sprite
     var p = populations.copy();
     for (i in 0...populations.length)
       {
+	// If any species overbreed or become extinct, we lose
+	if (populations[i] < 1 || populations[i] > maxPopulations[i])
+	  {
+	    hudLabel.text = hudText + interventions + "\n\nFailed!";
+	    done = true;
+	    defeat();
+	  }
+
 	var s = ecosystem.species(i);
 
 	// Natural reproduction (negative for non-plants)
 	var d = s.reproduction;
 
-	// Effects of hunting
-	for (j in 0...populations.length)
-	  {
-	    if (ecosystem.preyOf(i, j)) { d += s.efficiency * p[j]; }
-	  }
+	// Effects of hunting and being hunted
+	for (j in 0...populations.length) { d += ecosystem.stepCoefficient(i, j) * p[j]; }
 
-	// Effects of being hunted
-	for (j in 0...populations.length)
-	  {
-	    if (ecosystem.preyOf(j, i)) { d -= ecosystem.species(j).efficiency * p[j]; }
-	  }
 	populations[i] *= 1 + dt * d;
       }
 
@@ -142,8 +196,8 @@ class Scene extends Sprite
     for (species in 0...populations.length)
       {
 	graphics.lineStyle(1, ecosystem.species(species).colour);
-	graphics.moveTo(prevTime * 0.001, stage.stageHeight * (1 - 0.25 * prevPopulations[species] / maxPopulations[species]));
-	graphics.lineTo(curTime * 0.001, stage.stageHeight * (1 - 0.25 * populations[species] / maxPopulations[species]));
+	graphics.moveTo(ownTime - dt, stage.stageHeight * (1 - 0.25 * prevPopulations[species] / maxPopulations[species]));
+	graphics.lineTo(ownTime, stage.stageHeight * (1 - 0.25 * populations[species] / maxPopulations[species]));
       }
 
     // Save time and populations for the next round
@@ -162,13 +216,14 @@ class Scene extends Sprite
   }
 
   // Kill a specific creature
-  public function kill(creature:Creature, interactive:Bool = true)
+  public function kill(creature:Creature)
   {
     var species = creature.species;
     populations[species] = Math.max(0, populations[species] - 1);
     creatures[species].remove(creature);
     removeChild(creature);
-    interactions++;
+    interventions++;
+    hudLabel.text = hudText + interventions;
   }
 
 }

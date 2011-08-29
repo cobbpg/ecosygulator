@@ -31,6 +31,7 @@ class Ecosystem
 
   private var speciesProperties:Array<Species>;
   private var preyMatrix:Array<Array<Bool>>;
+  private var stepMatrix:Array<Array<Float>>;
 
   public function new(description:String)
   {
@@ -38,6 +39,7 @@ class Ecosystem
     var n = sds.length;
     speciesProperties = [];
     preyMatrix = [];
+    stepMatrix = [];
 
     for (sd in sds)
       {
@@ -54,6 +56,19 @@ class Ecosystem
 	speciesProperties.push({speed:speed, colour:colour, reproduction:reproduction, efficiency:efficiency});
 	preyMatrix.push(preys);
       }
+
+    for (i in 0...n)
+      {
+	var cs = [];
+
+	for (j in 0...n)
+	  {
+	    cs.push((preyOf(i, j) ? speciesProperties[i].efficiency : 0) -
+		    (preyOf(j, i) ? speciesProperties[j].efficiency : 0));
+	  }
+
+	stepMatrix.push(cs);
+      }
   }
 
   public function species(sid:Int):Species
@@ -64,6 +79,11 @@ class Ecosystem
   public function preyOf(predator:Int, prey:Int):Bool
   {
     return preyMatrix[predator][prey];
+  }
+
+  public function stepCoefficient(subject:Int, partner:Int):Float
+  {
+    return stepMatrix[subject][partner];
   }
 
 }
