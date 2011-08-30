@@ -22,6 +22,7 @@ import flash.Lib;
 import flash.display.MovieClip;
 import flash.events.Event;
 import flash.events.MouseEvent;
+import flash.events.KeyboardEvent;
 
 class Main extends MovieClip
 {
@@ -35,11 +36,15 @@ class Main extends MovieClip
   */
 
   public static inline var levels =
-    [{ ecosystem: "0,33cc22,0.02,0;3,ffffff,-0.015,0.0025,0;5,000000,-0.02,0.002,1",
-       startPop: [20.0,20.0,10.0], maxPop: [50.0,50.0,50.0] },
-     { ecosystem: "0,33cc22,0.04,0;3,ffffff,-0.015,0.0035,0;5,000000,-0.02,0.002,1;5,cc2200,-0.02,0.0015,0,1",
-       startPop: [20.0,20.0,10.0,10.0], maxPop: [50.0,50.0,50.0,50.0] }
-     ];
+    [ { ecosystem: "0,33cc22,0.02,0;3,ffffff,-0.02,0.0025,0",
+	startPop: [20.0,20.0], maxPop: [50.0,50.0] },
+      { ecosystem: "0,33cc22,0.02,0;3,ffffff,-0.02,0.0025,0;5,000000,-0.02,0.003,1",
+	startPop: [20.0,20.0,10.0], maxPop: [50.0,50.0,50.0] },
+      { ecosystem: "0,33cc22,0.04,0;3,ffffff,-0.015,0.0035,0;5,000000,-0.02,0.002,1;5,cc2200,-0.02,0.0015,0,1",
+	startPop: [20.0,20.0,10.0,10.0], maxPop: [50.0,50.0,50.0,50.0] },
+      { ecosystem: "0,33cc22,0.04,0;3,ffffff,-0.015,0.0035,0;5,000000,-0.02,0.003,1;5,cc2200,-0.02,0.0015,0,1;10,0033ee,-0.01,0.001,2,3",
+	startPop: [20.0,20.0,10.0,10.0,10.0], maxPop: [50.0,50.0,50.0,50.0,50.0] }
+      ];
   private var scene:Scene;
   private var currentLevel:Int;
 
@@ -61,7 +66,7 @@ class Main extends MovieClip
   private function waitForClick()
   {
     mouseChildren = false;
-    addEventListener(MouseEvent.CLICK, onClick, false, 0, true);
+    stage.addEventListener(KeyboardEvent.KEY_DOWN, onClick, false, 0, true);
   }
 
   private function startLevel(level:Int)
@@ -90,7 +95,7 @@ class Main extends MovieClip
 
   public function onClick(e:Event)
   {
-    removeEventListener(MouseEvent.CLICK, onClick, false);
+    stage.removeEventListener(KeyboardEvent.KEY_DOWN, onClick, false);
     mouseChildren = true;
     startLevel(currentLevel);
   }

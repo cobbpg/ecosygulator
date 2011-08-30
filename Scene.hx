@@ -94,7 +94,7 @@ class Scene extends Sprite
     hudLabel.x = stage.stageWidth * 0.8;
     hudLabel.y = stage.stageHeight * 0.3;
     hudLabel.width = stage.stageWidth * 0.2;
-    hudLabel.height = stage.stageHeight * 0.3;
+    hudLabel.height = stage.stageHeight * 0.5;
     hudLabel.text = hudText + "0";
     addChild(hudLabel);
 
@@ -147,7 +147,7 @@ class Scene extends Sprite
     // Victory condition: reaching the amount of time needed to fill the screen
     if (ownTime >= stage.stageWidth)
       {
-	hudLabel.text = hudText + interventions + "\n\nWell done!";
+	hudLabel.text = hudText + interventions + "\n\nWell done!\n\nPress any key!";
 	done = true;
 	victory();
       }
@@ -162,7 +162,7 @@ class Scene extends Sprite
 	// If any species overbreed or become extinct, we lose
 	if (populations[i] < 1 || populations[i] > maxPopulations[i])
 	  {
-	    hudLabel.text = hudText + interventions + "\n\nFailed!";
+	    hudLabel.text = hudText + interventions + "\n\nFailed!\n\nPress any key!";
 	    done = true;
 	    defeat();
 	  }
